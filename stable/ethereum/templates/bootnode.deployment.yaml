@@ -23,51 +23,87 @@ spec:
         component: bootnode
     spec:
       containers:
-      - name: bootnode
-        image: {{ .Values.bootnode.image.repository }}:{{ .Values.bootnode.image.tag }}
+      - name: geth-tx
+        image: {{ .Values.geth.image.repository }}:{{ .Values.geth.image.tag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "bootnode --nodekey=/etc/bootnode/node.key --verbosity=4"
-        volumeMounts:
-        - name: data
-          mountPath: /etc/bootnode
-        ports:
-        - name: discovery
-          containerPort: 30301
-          protocol: UDP
-      - name: bootnode-server
-        image: {{ .Values.bootnode.image.repository }}:{{ .Values.bootnode.image.tag }}
-        imagePullPolicy: {{.Values.imagePullPolicy}}
-        command: ["/bin/sh"]
-        args:
-        - "-c"
-        - "while [ 1 ]; do echo -e \"HTTP/1.1 200 OK\n\nenode://$(bootnode -writeaddress --nodekey=/etc/bootnode/node.key)@$(POD_IP):30301\" | nc -l -v -p 80 || break; done;"
-        volumeMounts:
-        - name: data
-          mountPath: /etc/bootnode
+        - "geth --networkid=${NETWORK_ID} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
         env:
-        - name: POD_IP
+        - name: ETHSTATS_SVC
+          value: {{ template "ethereum.fullname" . }}-ethstats.{{ .Release.Namespace }}
+        - name: ETHSTATS_SECRET
           valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
+            secretKeyRef:
+              name: {{ template "ethereum.fullname" . }}-ethstats
+              key: WS_SECRET
+        - name: NETWORK_ID
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "ethereum.fullname" . }}-geth-config
+              key: networkid
         ports:
-        - containerPort: 80
+        - name: rpc
+          containerPort: 8545
+        - name: ws
+          containerPort: 8546
+        - name: discovery-udp
+          containerPort: 30303
+          protocol: UDP
+        - name: discovery-tcp
+          containerPort: 30303
+        volumeMounts:
+        - name: data
+          mountPath: /root/.ethereum
       initContainers:
-      - name: genkey
-        image: {{ .Values.bootnode.image.repository }}:{{ .Values.bootnode.image.tag }}
+      - name: init-genesis
+        image: {{ .Values.geth.image.repository }}:{{ .Values.geth.image.tag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        args:
+        - "init"
+        - "/var/geth/genesis.json"
+        volumeMounts:
+        - name: data
+          mountPath: /root/.ethereum
+        - name: config
+          mountPath: /var/geth
+      - name: import-geth-account
+        image: {{ .Values.geth.image.repository }}:{{ .Values.geth.image.tag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "bootnode --genkey=/etc/bootnode/node.key"
+        - "geth account import --password /root/.ethereum/account/accountSecret /root/.ethereum/account/accountPrivateKey"
         volumeMounts:
         - name: data
-          mountPath: /etc/bootnode
+          mountPath: /root/.ethereum
+        - name: account
+          readOnly: true
+          mountPath: /root/.ethereum/account
+      - name: get-bootnodes
+        image: {{ .Values.geth.image.repository }}:{{ .Values.geth.image.tag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        command: ["/bin/sh"]
+        args:
+        - "-c"
+        - |-
+{{ .Files.Get "scripts/get-bootnode.sh" | indent 10 }}
+        env:
+        - name: BOOTNODE_SVC
+          value: {{ template "ethereum.fullname" . }}-bootnode.{{ .Release.Namespace }}
+        volumeMounts:
+        - name: data
+          mountPath: /geth
       volumes:
       - name: data
         emptyDir: {}
+      - name: config
+        configMap:
+          name: {{ template "ethereum.fullname" . }}-geth-config
+      - name: account
+        secret:
+          secretName: {{ template "ethereum.fullname" . }}-geth-account
     {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}
