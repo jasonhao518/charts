@@ -29,7 +29,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth --networkid=${NETWORK_ID} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
+        - "geth --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
         env:
         - name: ETHSTATS_SVC
           value: {{ template "ethereum.fullname" . }}-ethstats.{{ .Release.Namespace }}
@@ -38,11 +38,6 @@ spec:
             secretKeyRef:
               name: {{ template "ethereum.fullname" . }}-ethstats
               key: WS_SECRET
-        - name: NETWORK_ID
-          valueFrom:
-            configMapKeyRef:
-              name: {{ template "ethereum.fullname" . }}-geth-config
-              key: networkid
         ports:
         - name: rpc
           containerPort: 8545
