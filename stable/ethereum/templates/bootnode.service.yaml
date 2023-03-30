@@ -15,8 +15,11 @@ spec:
     component: bootnode
   clusterIP: None
   ports:
-  - name: discovery
-    port: 30301
+  - name: discovery-udp
+    port: 30303
     protocol: UDP
+  - name: discovery-tcp
+    port: 30303
+    protocol: TCP
   - name: http
     port: 80
