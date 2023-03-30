@@ -29,7 +29,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth --nat extip:${POD_IP}  --datadir /root/.ethereum --bootnodes=`cat /root/.ethereum/bootnodes` --miner.etherbase {{.Values.geth.account.address}} --unlock {{ .Values.geth.account.address }} --password /root/.ethereum/account/accountSecret --mine --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
+        - "geth --nat extip:${POD_IP}  --datadir /root/.ethereum --bootnodes=`cat /root/.ethereum/bootnodes` --mine --miner.etherbase {{.Values.geth.account.address}} --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
         env:
         - name: POD_IP
           valueFrom:
@@ -51,9 +51,6 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /root/.ethereum
-        - name: account
-          readOnly: true
-          mountPath: /root/.ethereum/account
       initContainers:
       - name: init-genesis
         image: {{ .Values.geth.image.repository }}:{{ .Values.geth.image.tag }}
