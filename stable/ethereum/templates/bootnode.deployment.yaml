@@ -104,13 +104,17 @@ spec:
         args:
         - "-c"
         - |-
-            echo -n "enode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@$(POD_IP):30301" > /geth/bootnodes;
+            echo -n "enode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@$(POD_IP):30303" > /etc/bootnode/bootnodes;
         env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
         - name: BOOTNODE_SVC
           value: {{ template "ethereum.fullname" . }}-bootnode.{{ .Release.Namespace }}
         volumeMounts:
         - name: data
-          mountPath: /geth
+          mountPath: /etc/bootnode
       volumes:
       - name: data
         emptyDir: {}
