@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ template "ethereum.fullname" . }}-bootnode
   labels:
@@ -9,6 +9,7 @@ metadata:
     heritage: {{ .Release.Service }}
     component: bootnode
 spec:
+  serviceName: {{ template "ethereum.fullname" . }}-bootnode
   replicas: 1
   selector:
     matchLabels:
@@ -29,7 +30,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth --nat extip:${POD_IP}  --datadir /root/.ethereum --bootnodes=`cat /root/.ethereum/bootnodes` --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
+        - "geth --nat extip:$({{ template "ethereum.fullname.upper" . }}_BOOTNODE_SERVICE_HOST)  --datadir /root/.ethereum --bootnodes=`cat /root/.ethereum/bootnodes` --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
         env:
         - name: POD_IP
           valueFrom:
@@ -61,7 +62,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "while [ 1 ]; do echo -e \"HTTP/1.1 200 OK\n\nenode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@$(POD_IP):30303\" | nc -l -v -p 80 || break; done;"
+        - "while [ 1 ]; do echo -e \"HTTP/1.1 200 OK\n\nenode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@$({{ template "ethereum.fullname.upper" . }}_BOOTNODE_SERVICE_HOST):30303\" | nc -l -v -p 80 || break; done;"
         volumeMounts:
         - name: data
           mountPath: /etc/bootnode
@@ -79,7 +80,13 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth --datadir /root/.ethereum init /var/geth/genesis.json && echo -n \"enode://$(bootnode -writeaddress --nodekey=/root/.ethereum/geth/nodekey)@$(POD_IP):30303\" > /root/.ethereum/bootnodes"
+        - |
+          if [ -d "/root/.ethereum/geth" ]
+          then
+              echo "Directory /path/to/dir exists."
+          else
+              geth --datadir /root/.ethereum init /var/geth/genesis.json && echo -n "enode://$(bootnode -writeaddress --nodekey=/root/.ethereum/geth/nodekey)@$({{ template "ethereum.fullname.upper" . }}_BOOTNODE_SERVICE_HOST):30303" > /root/.ethereum/bootnodes
+          fi
         env:
         - name: POD_IP
           valueFrom:
@@ -98,7 +105,13 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth --datadir /root/.ethereum account import --password /root/.ethereum/account/accountSecret /root/.ethereum/account/accountPrivateKey"
+        - |
+          if [ -d "/root/.ethereum/geth" ]
+          then
+              echo "Directory /path/to/dir exists."
+          else
+              geth --datadir /root/.ethereum account import --password /root/.ethereum/account/accountSecret /root/.ethereum/account/accountPrivateKey
+          fi
         volumeMounts:
         - name: data
           mountPath: /root/.ethereum
@@ -106,8 +119,6 @@ spec:
           readOnly: true
           mountPath: /root/.ethereum/account
       volumes:
-      - name: data
-        emptyDir: {}
       - name: config
         configMap:
           name: {{ template "ethereum.fullname" . }}-geth-config
@@ -118,3 +129,11 @@ spec:
       nodeSelector:
 {{ toYaml . | indent 8 }}
     {{- end }}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
