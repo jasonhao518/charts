@@ -30,7 +30,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth --nat extip:${POD_IP}  --datadir /root/.ethereum --bootnodes=`cat /root/.ethereum/bootnodes` --http --http.addr 0.0.0.0 --http.api={{ .Values.geth.tx.args.rpcapi }} --http.corsdomain='*' --http.vhosts='*' --ws --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=3"
+        - "geth --nat extip:${POD_IP}  --datadir /root/.ethereum --bootnodes=`cat /root/.ethereum/bootnodes` --http --http.addr 0.0.0.0 --http.api={{ .Values.geth.tx.args.rpcapi }} --http.corsdomain='*' --http.vhosts='*' --ws --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
         env:
         - name: POD_IP
           valueFrom:
