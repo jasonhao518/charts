@@ -62,7 +62,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "while [ 1 ]; do echo -e \"HTTP/1.1 200 OK\n\nenode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@$(ETHEREUM_BOOTNODE_SERVICE_HOST):30303\" | nc -l -v -p 80 || break; done;"
+        - "while [ 1 ]; do echo -e \"HTTP/1.1 200 OK\n\nenode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@{{ template "ethereum.fullname.upper" . }}_BOOTNODE_SERVICE_HOST:30303\" | nc -l -v -p 80 || break; done;"
         volumeMounts:
         - name: data
           mountPath: /etc/bootnode
