@@ -29,7 +29,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth --bootnodes=`cat /root/.ethereum/bootnodes` --mine --miner.etherbase {{.Values.geth.account.address}} --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
+        - "geth --datadir /root/.ethereum --bootnodes=`cat /root/.ethereum/bootnodes` --mine --miner.etherbase {{.Values.geth.account.address}} --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
         env:
         - name: ETHSTATS_SVC
           value: {{ template "ethereum.fullname" . }}-ethstats.{{ .Release.Namespace }}
@@ -65,7 +65,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth account import --password /root/.ethereum/account/accountSecret /root/.ethereum/account/accountPrivateKey"
+        - "geth --datadir /root/.ethereum account import --password /root/.ethereum/account/accountSecret /root/.ethereum/account/accountPrivateKey"
         volumeMounts:
         - name: data
           mountPath: /root/.ethereum
