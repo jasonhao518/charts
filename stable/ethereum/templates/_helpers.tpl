@@ -32,13 +32,13 @@ If release name contains chart name it will be used as a full name.
 */}}
 {{- define "ethereum.fullname.upper" -}}
 {{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" - | upper -}}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" | upper | replace "-" "_" -}}
 {{- else -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
 {{- if contains $name .Release.Name -}}
 {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" | upper -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" | upper | replace "-" "_" -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
