@@ -29,8 +29,12 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth --datadir /root/.ethereum --bootnodes=`cat /root/.ethereum/bootnodes` --mine --miner.etherbase {{.Values.geth.account.address}} --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
+        - "geth --nat extip:${POD_IP}  --datadir /root/.ethereum --bootnodes=`cat /root/.ethereum/bootnodes` --mine --miner.etherbase {{.Values.geth.account.address}} --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
         env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
         - name: ETHSTATS_SVC
           value: {{ template "ethereum.fullname" . }}-ethstats.{{ .Release.Namespace }}
         - name: ETHSTATS_SECRET
