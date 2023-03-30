@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: geth-tx
-        image: {{ .Values.geth.image.repository }}:{{ .Values.geth.image.tag }}
+        image: {{ .Values.bootnode.image.repository }}:{{ .Values.bootnode.image.tag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         command: ["/bin/sh"]
         args:
