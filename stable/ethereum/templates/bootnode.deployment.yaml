@@ -29,7 +29,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "while [ 1 ]; do echo -e \"HTTP/1.1 200 OK\n\nenode://$(bootnode -writeaddress --nodekey=/root/.ethereum/geth/nodekey)@$(POD_IP):30303\" | nc -l -v -p 80 || break; done;"
+        - "while [ 1 ]; do echo -e \"HTTP/1.1 200 OK\n\nenode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@$(POD_IP):30303\" | nc -l -v -p 80 || break; done;"
         volumeMounts:
         - name: data
           mountPath: /etc/bootnode
