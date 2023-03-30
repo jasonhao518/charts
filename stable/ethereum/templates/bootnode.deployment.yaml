@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: {{ template "ethereum.fullname" . }}-bootnode
   labels:
@@ -9,7 +9,6 @@ metadata:
     heritage: {{ .Release.Service }}
     component: bootnode
 spec:
-  serviceName: {{ template "ethereum.fullname" . }}-bootnode
   replicas: 1
   selector:
     matchLabels:
@@ -107,6 +106,8 @@ spec:
           readOnly: true
           mountPath: /root/.ethereum/account
       volumes:
+      - name: data
+        emptyDir: {}
       - name: config
         configMap:
           name: {{ template "ethereum.fullname" . }}-geth-config
@@ -117,11 +118,3 @@ spec:
       nodeSelector:
 {{ toYaml . | indent 8 }}
     {{- end }}
-  volumeClaimTemplates:
-  - metadata:
-      name: data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 10Gi
