@@ -76,9 +76,17 @@ spec:
       - name: init-genesis
         image: {{ .Values.geth.image.repository }}:{{ .Values.geth.image.tag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
+        command: ["/bin/sh"]
         args:
-        - "init"
-        - "/var/geth/genesis.json"
+        - "-c"
+        - "geth init /var/geth/genesis.json && echo -n "enode://$(bootnode -writeaddress --nodekey=/root/.ethereum/geth/nodekey)@$(POD_IP):30303" > /root/.ethereum/bootnodes"
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: BOOTNODE_SVC
+          value: {{ template "ethereum.fullname" . }}-bootnode.{{ .Release.Namespace }}
         volumeMounts:
         - name: data
           mountPath: /root/.ethereum
@@ -97,24 +105,6 @@ spec:
         - name: account
           readOnly: true
           mountPath: /root/.ethereum/account
-      - name: get-bootnodes
-        image: {{ .Values.geth.image.repository }}:{{ .Values.geth.image.tag }}
-        imagePullPolicy: {{ .Values.imagePullPolicy }}
-        command: ["/bin/sh"]
-        args:
-        - "-c"
-        - |-
-            echo -n "enode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@$(POD_IP):30303" > /etc/bootnode/bootnodes;
-        env:
-        - name: POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        - name: BOOTNODE_SVC
-          value: {{ template "ethereum.fullname" . }}-bootnode.{{ .Release.Namespace }}
-        volumeMounts:
-        - name: data
-          mountPath: /etc/bootnode
       volumes:
       - name: data
         emptyDir: {}
