@@ -27,14 +27,14 @@ geth:
     tag: v1.11.4
   tx:
     # transaction nodes
-    replicaCount: 1
+    replicaCount: 2
     service:
       type: ClusterIP
     args:
       rpcapi: 'eth,net,web3,debug'
   miner:
     # miner nodes
-    replicaCount: 1
+    replicaCount: 2
   genesis:
     # geth genesis block
     difficulty: '0x0400'
