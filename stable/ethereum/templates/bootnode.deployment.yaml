@@ -30,7 +30,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth --nat extip:${POD_IP}  --datadir /root/.ethereum --bootnodes=`cat /root/.ethereum/bootnodes` --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
+        - "geth --nat extip:$({{ template "ethereum.fullname.upper" . }}_BOOTNODE_SERVICE_HOST)  --datadir /root/.ethereum --bootnodes=`cat /root/.ethereum/bootnodes` --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
         env:
         - name: POD_IP
           valueFrom:
@@ -62,7 +62,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "while [ 1 ]; do echo -e \"HTTP/1.1 200 OK\n\nenode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@$(POD_IP):30303\" | nc -l -v -p 80 || break; done;"
+        - "while [ 1 ]; do echo -e \"HTTP/1.1 200 OK\n\nenode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@$({{ template "ethereum.fullname.upper" . }}_BOOTNODE_SERVICE_HOST):30303\" | nc -l -v -p 80 || break; done;"
         volumeMounts:
         - name: data
           mountPath: /etc/bootnode
@@ -85,7 +85,7 @@ spec:
           then
               echo "Directory /path/to/dir exists."
           else
-              geth --datadir /root/.ethereum init /var/geth/genesis.json && echo -n "enode://$(bootnode -writeaddress --nodekey=/root/.ethereum/geth/nodekey)@$(POD_IP):30303" > /root/.ethereum/bootnodes
+              geth --datadir /root/.ethereum init /var/geth/genesis.json && echo -n "enode://$(bootnode -writeaddress --nodekey=/root/.ethereum/geth/nodekey)@$({{ template "ethereum.fullname.upper" . }}_BOOTNODE_SERVICE_HOST):30303" > /root/.ethereum/bootnodes
           fi
         env:
         - name: POD_IP
