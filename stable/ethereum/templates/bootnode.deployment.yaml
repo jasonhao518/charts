@@ -46,7 +46,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth --port 30301 --datadir /root/.ethereum --nat extip:${POD_IP} --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
+        - "geth --nodiscover true --port 30301 --datadir /root/.ethereum --nat extip:${POD_IP} --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
         env:
         - name: POD_IP
           valueFrom:
