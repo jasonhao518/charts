@@ -29,7 +29,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "while [ 1 ]; do echo -e \"HTTP/1.1 200 OK\n\nenode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@$(POD_IP):30303\" | nc -l -v -p 80 || break; done;"
+        - "while [ 1 ]; do echo -e \"HTTP/1.1 200 OK\n\nenode://$(bootnode -writeaddress --nodekey=/etc/bootnode/geth/nodekey)@$(POD_IP):30301\" | nc -l -v -p 80 || break; done;"
         volumeMounts:
         - name: data
           mountPath: /etc/bootnode
@@ -46,7 +46,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - "geth --datadir /root/.ethereum --nat extip:${POD_IP} --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
+        - "geth --port 30301 --datadir /root/.ethereum --nat extip:${POD_IP} --networkid={{ .Values.geth.genesis.networkId }} --ethstats=${HOSTNAME}:${ETHSTATS_SECRET}@${ETHSTATS_SVC} --verbosity=5"
         env:
         - name: POD_IP
           valueFrom:
@@ -65,10 +65,10 @@ spec:
         - name: ws
           containerPort: 8546
         - name: discovery-udp
-          containerPort: 30303
+          containerPort: 30301
           protocol: UDP
         - name: discovery-tcp
-          containerPort: 30303
+          containerPort: 30301
         volumeMounts:
         - name: data
           mountPath: /root/.ethereum

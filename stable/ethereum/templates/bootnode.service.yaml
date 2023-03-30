@@ -16,10 +16,10 @@ spec:
   clusterIP: None
   ports:
   - name: discovery-udp
-    port: 30303
+    port: 30301
     protocol: UDP
   - name: discovery-tcp
-    port: 30303
+    port: 30301
     protocol: TCP
   - name: http
     port: 80
