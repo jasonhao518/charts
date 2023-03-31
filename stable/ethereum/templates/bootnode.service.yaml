@@ -13,7 +13,7 @@ spec:
     app: {{ template "ethereum.name" . }}
     release: {{ .Release.Name }}
     component: bootnode
-  publishNotReadyAddresses: true
+  clusterIP: None
   ports:
   - name: discovery-udp
     port: 30303

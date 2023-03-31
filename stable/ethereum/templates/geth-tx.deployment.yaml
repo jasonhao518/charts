@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: {{ template "ethereum.fullname" . }}-geth-tx
   labels:
@@ -9,7 +9,6 @@ metadata:
     heritage: {{ .Release.Service }}
     component: geth-tx
 spec:
-  serviceName: {{ template "ethereum.fullname" . }}-geth-tx
   replicas: {{ .Values.geth.tx.replicaCount }}
   selector:
     matchLabels:
@@ -58,25 +57,11 @@ spec:
           mountPath: /root/.ethereum
       initContainers:
       - name: init-genesis
-        image: {{ .Values.bootnode.image.repository }}:{{ .Values.bootnode.image.tag }}
+        image: {{ .Values.geth.image.repository }}:{{ .Values.geth.image.tag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
-        command: ["/bin/sh"]
         args:
-        - "-c"
-        - |
-          if [ -d "/root/.ethereum/geth" ]
-          then
-              echo "Directory /path/to/dir exists."
-          else
-              geth --datadir /root/.ethereum init /var/geth/genesis.json && echo -n "enode://$(bootnode -writeaddress --nodekey=/root/.ethereum/geth/nodekey)@$({{ template "ethereum.fullname.upper" . }}_BOOTNODE_SERVICE_HOST):30303" > /root/.ethereum/bootnodes
-          fi
-        env:
-        - name: POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        - name: BOOTNODE_SVC
-          value: {{ template "ethereum.fullname" . }}-bootnode.{{ .Release.Namespace }}
+        - "init"
+        - "/var/geth/genesis.json"
         volumeMounts:
         - name: data
           mountPath: /root/.ethereum
@@ -88,13 +73,7 @@ spec:
         command: ["/bin/sh"]
         args:
         - "-c"
-        - |
-          if [ -d "/root/.ethereum/geth" ]
-          then
-              echo "Directory /path/to/dir exists."
-          else
-              geth --datadir /root/.ethereum account import --password /root/.ethereum/account/accountSecret /root/.ethereum/account/accountPrivateKey
-          fi
+        - "geth --datadir /root/.ethereum account import --password /root/.ethereum/account/accountSecret /root/.ethereum/account/accountPrivateKey"
         volumeMounts:
         - name: data
           mountPath: /root/.ethereum
@@ -116,6 +95,8 @@ spec:
         - name: data
           mountPath: /geth
       volumes:
+      - name: data
+        emptyDir: {}
       - name: config
         configMap:
           name: {{ template "ethereum.fullname" . }}-geth-config
@@ -126,11 +107,3 @@ spec:
       nodeSelector:
 {{ toYaml . | indent 8 }}
     {{- end }}
-  volumeClaimTemplates:
-  - metadata:
-      name: data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 10Gi
