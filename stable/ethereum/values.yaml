@@ -11,7 +11,7 @@ nodeSelector: {}
 bootnode:
   image:
     repository: ethereum/client-go
-    tag: alltools-v1.7.3
+    tag: alltools-v1.10.26
 
 ethstats:
   image:
